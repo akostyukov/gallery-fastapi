@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+
+  web:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    command: bash -c "cd src/ && uvicorn main:app"
+    expose:
+      - 8000
+    depends_on:
+      - db
+
+#  nginx:
+#    build: ./nginx
+#    volumes:
+#      - static_volume:/news-api/src/static
+#      - media_volume:/news-api/src/media
+#    ports:
+#      - 8000:80
+#    depends_on:
+#      - web
+#    networks:
+#      - rabbitNetwork
