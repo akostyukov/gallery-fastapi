@@ -1,4 +1,4 @@
-from authlib.integrations.starlette_client import BaseOAuth, OAuth
+from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
@@ -18,10 +18,9 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
 )
 
-
 register_tortoise(
     app,
-    db_url="postgres://postgres:postgres@localhost:5432/fastapi_db",
+    db_url="postgres://postgres:postgres@db:5432/postgres",
     modules={"models": ["models", "auth", "images", "comments"]},
     generate_schemas=True,
     add_exception_handlers=True,
