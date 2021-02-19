@@ -8,25 +8,19 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
 
-
   web:
     build:
       context: ../
       dockerfile: deploy/Dockerfile
-    command: bash -c "cd src/ && uvicorn main:app"
+    command: bash -c "cd src/ && uvicorn main:app --host 0.0.0.0"
     expose:
       - 8000
     depends_on:
       - db
 
-#  nginx:
-#    build: ./nginx
-#    volumes:
-#      - static_volume:/news-api/src/static
-#      - media_volume:/news-api/src/media
-#    ports:
-#      - 8000:80
-#    depends_on:
-#      - web
-#    networks:
-#      - rabbitNetwork
+  nginx:
+    build: ./nginx
+    ports:
+      - 8000:80
+    depends_on:
+      - web

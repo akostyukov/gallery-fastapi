@@ -13,4 +13,4 @@ COPY Pipfile.lock $APP_HOME
 RUN pip install pipenv
 RUN pipenv install --system
 
-COPY /src /news-api/src
+COPY /src /gallery-fastapi/src
