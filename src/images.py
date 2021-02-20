@@ -2,9 +2,8 @@ import shutil
 import uuid
 from typing import List
 
-from fastapi import File, UploadFile
-from starlette.requests import Request
-from starlette.responses import JSONResponse, FileResponse
+from fastapi import Depends, File, UploadFile
+from starlette.responses import FileResponse, JSONResponse
 
 from auth import get_current_user
 from main import app
@@ -22,12 +21,9 @@ async def get_image(image_id: int):
 
 
 @app.post("/images/", response_model=Image_Pydantic)
-async def create_image(request: Request, image: UploadFile = File(...)):
-    try:
-        user = await get_current_user(request)
-    except:
-        return JSONResponse({"error": "user is not authenticated"})
-
+async def create_image(
+    user: User = Depends(get_current_user), image: UploadFile = File(...)
+):
     file_path = f"/media/{str(uuid.uuid4())[:8]}_{image.filename}"
 
     with open(file_path, "wb") as buffer:
@@ -38,19 +34,14 @@ async def create_image(request: Request, image: UploadFile = File(...)):
 
 
 @app.post("/images/{image_id}/like")
-async def like(request: Request, image_id: int):
+async def like(image_id: int, user: User = Depends(get_current_user)):
     image = await Image.get(id=image_id).prefetch_related("likes")
 
-    try:
-        user = await get_current_user(request)
-    except:
-        return JSONResponse({"error": "user is not authenticated"})
-
     if user in image.likes:
-        await image.likes.remove(await get_current_user(request))
+        await image.likes.remove(user)
         response = "unset"
     else:
-        await image.likes.add(await get_current_user(request))
+        await image.likes.add(user)
         response = "set"
 
     return JSONResponse({"success": f"like has been {response}"})

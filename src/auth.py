@@ -2,6 +2,7 @@ import json
 from typing import List
 
 from authlib.integrations.starlette_client import OAuthError
+from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
@@ -52,4 +53,7 @@ async def get_users():
 
 
 async def get_current_user(request: Request):
-    return await User.get(email=request.session.get("user").get("email"))
+    try:
+        return await User.get(email=request.session.get("user").get("email"))
+    except:
+        raise HTTPException(status_code=401, detail="User is not authenticated")
