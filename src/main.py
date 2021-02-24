@@ -1,4 +1,5 @@
 from authlib.integrations.starlette_client import OAuth
+from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
@@ -7,6 +8,8 @@ from tortoise.contrib.fastapi import register_tortoise
 app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key="!secret")
+
+es = AsyncElasticsearch(hosts="elasticsearch")
 
 config = Config(".env")
 oauth = OAuth(config)

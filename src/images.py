@@ -2,11 +2,12 @@ import shutil
 import uuid
 from typing import List
 
+from elasticsearch._async.helpers import async_bulk
 from fastapi import Depends, File, UploadFile
 from starlette.responses import JSONResponse
 
 from auth import get_current_user
-from main import app
+from main import app, es
 from models import Image, Image_Pydantic, User
 
 
@@ -45,3 +46,24 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
         response = "set"
 
     return JSONResponse({"success": f"like has been {response}"})
+
+
+async def gendata():
+    mywords = ['foo', 'bar', 'baz']
+    for word in mywords:
+        yield {
+            "_index": "mywords",
+            "doc": {"word": word},
+        }
+
+
+@app.get("/sometest")
+async def sometest():
+    await async_bulk(es, gendata())
+
+
+@app.get("/search/{query}")
+async def search(query):
+    return await es.search(
+        body={"query": {"multi_match": {"query": query}}}
+    )
