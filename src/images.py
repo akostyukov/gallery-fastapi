@@ -3,7 +3,7 @@ import uuid
 from typing import List
 
 from fastapi import Depends, File, UploadFile
-from starlette.responses import FileResponse, JSONResponse
+from starlette.responses import JSONResponse
 
 from auth import get_current_user
 from main import app
@@ -45,9 +45,3 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
         response = "set"
 
     return JSONResponse({"success": f"like has been {response}"})
-
-
-@app.get("/image-file/{image_id}/")
-async def image_file(image_id: int):
-    image = await Image.get(id=image_id)
-    return FileResponse(image.image)
