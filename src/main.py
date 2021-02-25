@@ -7,9 +7,9 @@ from tortoise.contrib.fastapi import register_tortoise
 
 app = FastAPI()
 
-app.add_middleware(SessionMiddleware, secret_key="!secret")
-
 es = AsyncElasticsearch(hosts="elasticsearch")
+
+app.add_middleware(SessionMiddleware, secret_key="!secret")
 
 config = Config(".env")
 oauth = OAuth(config)

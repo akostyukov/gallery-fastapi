@@ -2,7 +2,6 @@ import shutil
 import uuid
 from typing import List
 
-from elasticsearch._async.helpers import async_bulk
 from fastapi import Depends, File, UploadFile
 from starlette.responses import JSONResponse
 
@@ -31,6 +30,7 @@ async def create_image(
         shutil.copyfileobj(image.file, buffer)
 
     image_obj = await Image.create(image=file_path, author_id=user.id)
+
     return await Image_Pydantic.from_tortoise_orm(image_obj)
 
 
@@ -48,22 +48,23 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
     return JSONResponse({"success": f"like has been {response}"})
 
 
-async def gendata():
-    mywords = ['foo', 'bar', 'baz']
-    for word in mywords:
-        yield {
-            "_index": "mywords",
-            "doc": {"word": word},
-        }
+# ---------------------------------------------------------------------------
 
 
-@app.get("/sometest")
-async def sometest():
-    await async_bulk(es, gendata())
+@app.get("/func")
+async def func():
+    # resp: dict = await es.search(
+    #     index="documents",
+    #     body={"query": {"match_all": {}}},
+    #     size=20,
+    # )
 
-
-@app.get("/search/{query}")
-async def search(query):
-    return await es.search(
-        body={"query": {"multi_match": {"query": query}}}
+    await es.create(
+        index="images",
+        id=4,
+        body={"header": "Header of a new image", "link": "link of an image"},
     )
+
+    return JSONResponse({"response": "task is done"})
+
+    # return JSONResponse(resp)
