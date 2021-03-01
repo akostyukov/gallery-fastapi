@@ -6,7 +6,8 @@ from fastapi import Depends, File, UploadFile
 from starlette.responses import JSONResponse
 
 from auth import get_current_user
-from main import app, es
+from elastic_image import ImageElastic
+from main import app
 from models import Image, Image_Pydantic, User
 
 
@@ -30,6 +31,7 @@ async def create_image(
         shutil.copyfileobj(image.file, buffer)
 
     image_obj = await Image.create(image=file_path, author_id=user.id)
+    await ImageElastic(image_obj.id, user.username, image_obj.image).create()
 
     return await Image_Pydantic.from_tortoise_orm(image_obj)
 
@@ -51,20 +53,20 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
 # ---------------------------------------------------------------------------
 
 
-@app.get("/func")
-async def func():
-    # resp: dict = await es.search(
-    #     index="documents",
-    #     body={"query": {"match_all": {}}},
-    #     size=20,
-    # )
-
-    await es.create(
-        index="images",
-        id=4,
-        body={"header": "Header of a new image", "link": "link of an image"},
-    )
-
-    return JSONResponse({"response": "task is done"})
-
-    # return JSONResponse(resp)
+# @app.get("/func")
+# async def func():
+#     # resp: dict = await es.search(
+#     #     index="documents",
+#     #     body={"query": {"match_all": {}}},
+#     #     size=20,
+#     # )
+#
+#     await es.create(
+#         index="images",
+#         id=4,
+#         body={"header": "Header of a new image", "link": "link of an image"},
+#     )
+#
+#     return JSONResponse({"response": "task is done"})
+#
+#     # return JSONResponse(resp)

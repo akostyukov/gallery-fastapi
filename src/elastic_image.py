@@ -1,17 +1,19 @@
 from main import es
-from models import User
 
 
 class ImageElastic:
     id: int
-    header: str
-    link: str
-    user: User
+    image_link: str
+    author: str
 
-    def __init__(self):
-        self.id = self.user.id
-        self.header = self.user.name
-        self.link = self.user.image
+    def __init__(self, image_id, author_id, image_link):
+        self.id = image_id
+        self.image_link = image_link
+        self.author = author_id
 
     async def create(self):
-        await es.create("images", self.id, body={"header": self.header, "link": self.link})
+        await es.create("images", self.id, body={"image": self.image_link, "author": self.author})
+
+    # @staticmethod
+    # async def search():
+    #     es.search(index="images")
