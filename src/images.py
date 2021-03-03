@@ -12,12 +12,11 @@ from models import Image, Image_Pydantic, User
 
 @app.get("/images/")
 async def get_images(search: str = None):
-    if search:
-        return await Image_Pydantic.from_queryset(
-            Image.filter(id__in=await ImageElastic.search(search))
-        )
-
-    return await Image_Pydantic.from_queryset(Image.all())
+    return await Image_Pydantic.from_queryset(
+        Image.filter(id__in=await ImageElastic.search(search))
+        if search
+        else Image.all()
+    )
 
 
 @app.get("/images/{image_id}/", response_model=Image_Pydantic)
