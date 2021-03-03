@@ -52,8 +52,3 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
         response = "set"
 
     return JSONResponse({"success": f"like has been {response}"})
-
-
-# @app.get("/images/")
-# async def elastic_search(search: str):
-#     return await ImageElastic.search(search)
