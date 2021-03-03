@@ -1,6 +1,5 @@
 import shutil
 import uuid
-from typing import List
 
 from fastapi import Depends, File, UploadFile
 from starlette.responses import JSONResponse
@@ -11,8 +10,13 @@ from main import app
 from models import Image, Image_Pydantic, User
 
 
-@app.get("/images/", response_model=List[Image_Pydantic])
-async def get_images():
+@app.get("/images/")
+async def get_images(search: str = None):
+    if search:
+        return await Image_Pydantic.from_queryset(
+            Image.filter(id__in=await ImageElastic.search(search))
+        )
+
     return await Image_Pydantic.from_queryset(Image.all())
 
 
@@ -23,15 +27,15 @@ async def get_image(image_id: int):
 
 @app.post("/images/", response_model=Image_Pydantic)
 async def create_image(
-    user: User = Depends(get_current_user), image: UploadFile = File(...)
+    title: str, user: User = Depends(get_current_user), image: UploadFile = File(...)
 ):
     file_path = f"/media/{str(uuid.uuid4())[:8]}_{image.filename}"
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(image.file, buffer)
 
-    image_obj = await Image.create(image=file_path, author_id=user.id)
-    await ImageElastic(image_obj.id, user.username, image_obj.image).create()
+    image_obj = await Image.create(image=file_path, title=title, author_id=user.id)
+    await ImageElastic(image_obj.id, title).create()
 
     return await Image_Pydantic.from_tortoise_orm(image_obj)
 
@@ -50,23 +54,6 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
     return JSONResponse({"success": f"like has been {response}"})
 
 
-# ---------------------------------------------------------------------------
-
-
-# @app.get("/func")
-# async def func():
-#     # resp: dict = await es.search(
-#     #     index="documents",
-#     #     body={"query": {"match_all": {}}},
-#     #     size=20,
-#     # )
-#
-#     await es.create(
-#         index="images",
-#         id=4,
-#         body={"header": "Header of a new image", "link": "link of an image"},
-#     )
-#
-#     return JSONResponse({"response": "task is done"})
-#
-#     # return JSONResponse(resp)
+# @app.get("/images/")
+# async def elastic_search(search: str):
+#     return await ImageElastic.search(search)

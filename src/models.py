@@ -16,6 +16,7 @@ class Comment(Model):
 
 class Image(Model):
     image = fields.CharField(max_length=500)
+    title = fields.CharField(max_length=100)
     author = fields.ForeignKeyField("models.User")
     likes = fields.ManyToManyField("models.User", related_name="likes")
 
