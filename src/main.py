@@ -1,10 +1,29 @@
-from authlib.integrations.starlette_client import BaseOAuth, OAuth
+from authlib.integrations.starlette_client import OAuth
+from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
+
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "https://accounts.google.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+es = AsyncElasticsearch(hosts="elasticsearch")
 
 app.add_middleware(SessionMiddleware, secret_key="!secret")
 
@@ -18,10 +37,9 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
 )
 
-
 register_tortoise(
     app,
-    db_url="postgres://postgres:postgres@localhost:5432/fastapi_db",
+    db_url="postgres://postgres:postgres@db:5432/postgres",
     modules={"models": ["models", "auth", "images", "comments"]},
     generate_schemas=True,
     add_exception_handlers=True,
