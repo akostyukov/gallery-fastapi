@@ -67,6 +67,7 @@ PyMySQL = "==0.9.3"
 PyPika = "==0.44.1"
 PyYAML = "==5.4.1"
 elastic-apm = "*"
+elasticsearch = {extras = ["async"], version = "*"}
 
 [dev-packages]
 
