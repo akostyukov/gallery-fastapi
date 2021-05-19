@@ -1,11 +1,10 @@
 from typing import List
 
-from starlette.requests import Request
-from starlette.responses import JSONResponse
+from fastapi import Depends
 
 from auth import get_current_user
 from main import app
-from models import Comment, Comment_Pydantic, CommentIn_Pydantic
+from models import Comment, Comment_Pydantic, CommentIn_Pydantic, User
 
 
 @app.get("/images/{image_id}/comments/", response_model=List[Comment_Pydantic])
@@ -14,12 +13,9 @@ async def get_comments(image_id: int):
 
 
 @app.post("/image/{image_id}/comments/", response_model=Comment_Pydantic)
-async def create_comment(request: Request, comment: CommentIn_Pydantic, image_id: int):
-    try:
-        user = await get_current_user(request)
-    except:
-        return JSONResponse({"error": "user is not authenticated"})
-
+async def create_comment(
+    comment: CommentIn_Pydantic, image_id: int, user: User = Depends(get_current_user)
+):
     comment_obj = await Comment.create(
         **comment.dict(exclude_unset=True), author_id=user.id, image_id=image_id
     )
