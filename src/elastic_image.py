@@ -1,4 +1,4 @@
-from main import es
+# from main import es
 
 
 class ImageElastic:
@@ -10,10 +10,14 @@ class ImageElastic:
         self.title = title
 
     async def create(self):
+        from main import es
+
         await es.create("images", self.id, body={"title": self.title})
 
     @staticmethod
     async def search(search_body: str):
+        from main import es
+
         search_result = await es.search(
             index="images",
             body={

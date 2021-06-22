@@ -1,49 +1,53 @@
 from typing import List
 
 from authlib.integrations.starlette_client import OAuthError
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
-from starlette.responses import JSONResponse
 
-from main import app, oauth
 from models import User, User_Pydantic
 
+auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@app.get("/login")
+
+@auth_router.get("/login")
 async def login(request: Request):
+    from main import oauth
+
     redirect_uri = request.url_for("auth")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
-@app.get("/auth")
+@auth_router.get("/")
 async def auth(request: Request):
+    from main import oauth
+
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
-        return JSONResponse({"error": error.error})
+        return {"error": error.error}
 
     user = await oauth.google.parse_id_token(request, token)
     request.session["user"] = dict(user)
 
     await User.get_or_create(email=user.email, username=user.email.split("@")[0])
 
-    return JSONResponse({"response": "login succeed"})
+    return {"response": "login succeed"}
 
 
-@app.post("/logout")
+@auth_router.post("/logout")
 async def logout(request: Request):
     request.session.pop("user", None)
-    return JSONResponse({"response": "logout succeed"})
+    return {"response": "logout succeed"}
 
 
-@app.get("/users/", response_model=List[User_Pydantic])
+@auth_router.get("/users/", response_model=List[User_Pydantic])
 async def get_users():
     return await User_Pydantic.from_queryset(User.all())
 
 
-@app.get("/users/me")
+@auth_router.get("/users/me")
 async def get_me(request: Request):
-    return JSONResponse({"me": (await get_current_user(request)).email})
+    return {"me": (await get_current_user(request)).email}
 
 
 async def get_current_user(request: Request):
