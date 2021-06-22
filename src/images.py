@@ -1,17 +1,17 @@
 import shutil
 import uuid
 
-from fastapi import Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import FileResponse
-from starlette.responses import JSONResponse
 
 from auth import get_current_user
 from elastic_image import ImageElastic
-from main import app
 from models import Image, Image_Pydantic, User
 
+images_router = APIRouter(prefix="/images", tags=["Images"])
 
-@app.get("/images/")
+
+@images_router.get("/")
 async def get_images(search: str = None):
     params = dict()
 
@@ -21,17 +21,17 @@ async def get_images(search: str = None):
     return await Image_Pydantic.from_queryset(Image.filter(**params))
 
 
-@app.get("/images/{image_id}/", response_model=Image_Pydantic)
+@images_router.get("/{image_id}/", response_model=Image_Pydantic)
 async def get_image(image_id: int):
     return await Image_Pydantic.from_queryset_single(Image.get(id=image_id))
 
 
-@app.get("/media/{image_id}/")
+@images_router.get("/media/{image_id}/")
 async def get_media(image_id: int):
     return FileResponse((await Image.get(id=image_id)).image)
 
 
-@app.post("/images/")
+@images_router.post("/")
 async def create_image(
     title: str, image: UploadFile = File(...), user: User = Depends(get_current_user)
 ):
@@ -46,7 +46,7 @@ async def create_image(
     return await Image_Pydantic.from_tortoise_orm(image_obj)
 
 
-@app.post("/images/{image_id}/like")
+@images_router.post("/{image_id}/like")
 async def like(image_id: int, user: User = Depends(get_current_user)):
     image = await Image.get(id=image_id).prefetch_related("likes")
 
@@ -57,4 +57,4 @@ async def like(image_id: int, user: User = Depends(get_current_user)):
         await image.likes.add(user)
         response = "set"
 
-    return JSONResponse({"success": f"like has been {response}"})
+    return {"success": f"like has been {response}"}
